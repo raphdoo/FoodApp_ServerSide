@@ -1,5 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose")
+
+const dishes = require("../model/dishSchema")
 
 const dishRouter = express.Router();
 
@@ -12,33 +15,86 @@ dishRouter.route("/")
     next()
 })
 .get((req, res, next) => {
-    res.end(`This will send all the dish name and description`)
+    dishes.find({})
+    .then((dishes)=>{
+
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(dishes)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .post((req, res, next) => {
-    res.end(`This will send all the dish name: ${req.body.name} and the description: ${req.body.description}`)
+    dishes.create(req.body)
+    .then(dish =>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(dish)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .put((req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
 .delete((req, res, next) =>{
-    res.end(`This will delete all the dishes`)
+    dishes.delete({})
+    .then((resp)=>{
+
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 });
 
 
 dishRouter.route("/:dishID")
 .get((req, res, next) => {
-    res.end(`This will get dish with id: ${req.params.dishID}`)
+    dishes.findById(req.params.dishID)
+    .then((dish)=>{
+        
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(dish)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .post((req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
 .put((req, res, next) => {
-    res.end(`This method will update dish name: ${req.body.name} and description: ${req.body.description} for dish with id: ${req.params.dishID}`);
+    dishes.findByIdAndUpdate(req.params.dishID, {
+        $set: req.body
+    },{ new:true})
+    .then((dish) => {
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(dish)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .delete((req, res, next) => {
-    res.end(`This will delete dish with id: ${req.params.dishID}`)
+    dishes.findByIdAndRemove(req.params.dishID)
+    .then((resp) =>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 });
 
 
