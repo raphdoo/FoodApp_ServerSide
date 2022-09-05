@@ -1,39 +1,46 @@
+//declaring the dependency variables
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+//connecting to the routes module
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var leaderRouter = require('./routes/leaderRouter');
 var promotionRouter = require('./routes/promotionRouter');
 
+//connecting to a database
 const mongoose = require("mongoose")
 const dishes = require("./model/dishSchema")
 
 mongoose.Promise = global.Promise;
-const url = "mongodb://localhost:27017/conFusion";
-const connect = mongoose.connect(url, {useMongoClient : true});
+const url = "mongodb://localhost:27017/conFusion"; //mongodb local server
+const connect = mongoose.connect(url, {useMongoClient : true}); //connecting to mongodb localhost server
 
 connect.then((db)=>{
   console.log("connected successfully to server")
 
-}, (err) => { console.log(err) })
+}, (err) => { next(err) })
 
+//using express framework
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+//declaring middlewares
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'))); //serving static files
 
+//declaring the routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);

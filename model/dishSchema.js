@@ -1,9 +1,12 @@
+//importing the mongoose database ORM
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
+//configuring for data type - Currency
 require("mongoose-currency").loadType(mongoose);
 const Currency = mongoose.Types.Currency
 
+//modelling the comment Schema
 const commentSchema = new Schema({
     rating: {
         type : Number,
@@ -23,6 +26,7 @@ const commentSchema = new Schema({
     timestamps: true
 })
 
+//modelling the dish schema
 const dishSchema = new Schema({
     name: {
         type : String,

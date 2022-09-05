@@ -1,9 +1,12 @@
+//importing the mongoose database ORM
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
+//configuring for data type - Currency
 require("mongoose-currency").loadType(mongoose);
 const Currency = mongoose.Types.Currency
 
+//modelling the leader schema
 const leaderSchema = new Schema({
     name: {
         type : String,
@@ -32,6 +35,6 @@ const leaderSchema = new Schema({
     },
 })
 
-const leaders = mongoose.model("leader", leaderSchema)
+const leaders = mongoose.model("leader", leaderSchema) //creating the model
 
-module.exports = leaders
+module.exports = leaders //exporting the created model

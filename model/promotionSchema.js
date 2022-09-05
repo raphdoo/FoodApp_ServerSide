@@ -1,9 +1,12 @@
+//importing the mongoose ORM
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
+//creating the data type 'currency' for the model
 require("mongoose-currency").loadType(mongoose);
 const Currency = mongoose.Types.Currency
 
+//modelling the promotion schema
 const promotionSchema = new Schema({
     name: {
         type : String,
@@ -30,9 +33,9 @@ const promotionSchema = new Schema({
     featured: {
         type: Boolean,
         default: false
-    },
+    },s
 })
 
-const promotions = mongoose.model("promotion", promotionSchema)
+const promotions = mongoose.model("promotion", promotionSchema) //creating the model
 
-module.exports = promotions
+module.exports = promotions //exporting the created model
