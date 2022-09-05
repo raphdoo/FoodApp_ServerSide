@@ -1,6 +1,9 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 
+const mongoose = require("mongoose")
+const leaders = require("../model/leaderSchema")
+
 leadersRouter = express.Router();
 
 leadersRouter.use(bodyParser.json())
@@ -12,33 +15,83 @@ leadersRouter.route("/")
     next()
 })
 .get((req, res, next) => {
-    res.end(`This will send all the leaders name and email`)
+    leaders.find({})
+    .then((leaders) =>{
+        res.statusCode = 200
+        res.send(leaders)
+        
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .post((req, res, next) => {
-    res.end(`This will add the leader name: ${req.body.name} and the description: ${req.body.description}`)
+    leaders.create(req.body)
+    .then((leader)=>{
+        res.statusCode = 200
+        res.send(leader)
+    }, (err) =>{ next(err) })
+    .catch((err) =>{ next(err) })
 })
 .put((req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
 .delete((req, res, next) =>{
-    res.end(`This will delete all the leaders`)
+    leaders.remove()
+    .then((resp) =>{
+
+        res.status = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err) => { next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 });
 
 
-leadersRouter.route("/:dishID")
+leadersRouter.route("/:leaderID")
 .get((req, res, next) => {
-    res.end(`This will get leader with id: ${req.params.dishID}`)
+    leaders.findById(req.params.leaderID)
+    .then((leader=>{
+        if(leader != null){
+
+            res.statusCode = 200
+            res.setHeader("Content-Type", "application/json")
+            res.send(leader)
+        }else{
+            res.statusCode = 404
+            res.send(`leader with id ${req.params.leaderID} not found`)
+        }
+    }), (err)=>{ next(err) })
+    .catch((err) => { next(err) })
 })
 .post((req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
 .put((req, res, next) => {
-    res.end(`This method will update leader name: ${req.body.name} and description: ${req.body.description} for dish with id: ${req.params.dishID}`);
+    leaders.findByIdAndUpdate(req.params.leaderID, {
+        $set: req.body
+    }, { new: true})
+    .then((leader)=>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(leader)
+    }, (err) =>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .delete((req, res, next) => {
-    res.end(`This will delete leader with id: ${req.params.dishID}`)
+    leaders.findByIdAndRemove(req.params.leaderID)
+    .then((resp)=>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{ next(err) })
 });
 
 

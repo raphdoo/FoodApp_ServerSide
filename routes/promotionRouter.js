@@ -1,6 +1,9 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 
+const mongoose = require("mongoose")
+const promotions = require("../model/promotionSchema")
+
 promotionRouter = express.Router();
 
 promotionRouter.use(bodyParser.json())
@@ -12,33 +15,82 @@ promotionRouter.route("/")
     next()
 })
 .get((req, res, next) => {
-    res.end(`This will send all the promotions name and description`)
+    promotions.find({})
+    .then((promotions) =>{
+        res.statusCode = 200
+        res.send(promotions)
+        
+    }, (err)=>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .post((req, res, next) => {
-    res.end(`This will add the promotion name: ${req.body.name} and the description: ${req.body.description}`)
+    promotions.create(req.body)
+    .then((promotion)=>{
+        res.statusCode = 200
+        res.send(promotion)
+    }, (err) =>{ next(err) })
+    .catch((err) =>{ next(err) })
 })
 .put((req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
 .delete((req, res, next) =>{
-    res.end(`This will delete all the promotions`)
+    promotions.remove()
+    .then((resp) =>{
+
+        res.status = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err) => { next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 });
 
-
-promotionRouter.route("/:dishID")
+promotionRouter.route("/:promoID")
 .get((req, res, next) => {
-    res.end(`This will get promotion with id: ${req.params.dishID}`)
+    promotions.findById(req.params.promoID)
+    .then((promotion=>{
+        if(promotion != null){
+
+            res.statusCode = 200
+            res.setHeader("Content-Type", "application/json")
+            res.send(promotion)
+        }else{
+            res.statusCode = 404
+            res.send(`Promotion with id ${req.params.promoID} not found`)
+        }
+    }), (err)=>{ next(err) })
+    .catch((err) => { next(err) })
 })
 .post((req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
 .put((req, res, next) => {
-    res.end(`This method will update promotion name: ${req.body.name} and description: ${req.body.description} for dish with id: ${req.params.dishID}`);
+    promotions.findByIdAndUpdate(req.params.promoID, {
+        $set: req.body
+    }, { new: true})
+    .then((promo)=>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(promo)
+    }, (err) =>{ next(err) })
+    .catch((err)=>{
+        next(err)
+    })
 })
 .delete((req, res, next) => {
-    res.end(`This will delete promotion with id: ${req.params.dishID}`)
+    promotions.findByIdAndRemove(req.params.promoID)
+    .then((resp)=>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.send(resp)
+    }, (err)=>{ next(err) })
+    .catch((err)=>{ next(err) })
 });
 
 
