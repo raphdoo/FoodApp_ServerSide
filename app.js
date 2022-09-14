@@ -17,9 +17,10 @@ var promotionRouter = require('./routes/promotionRouter');
 const mongoose = require("mongoose")
 const dishes = require("./model/dishSchema")
 
-mongoose.Promise = global.Promise;
+mongoose.set('useCreateIndex', true);
+
 const url = "mongodb://localhost:27017/conFusion"; //mongodb local server
-const connect = mongoose.connect(url, {useMongoClient : true}); //connecting to mongodb localhost server
+const connect = mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true }); //connecting to mongodb localhost server
 
 connect.then((db)=>{
   console.log("connected successfully to server")
@@ -38,6 +39,33 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+const authenticate=(req, res, next) =>{
+  console.log(req.headers);
+  var authHeader = req.headers.authorization;
+  if (!authHeader) {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      next(err);
+      return;
+  }
+
+  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  var user = auth[0];
+  var pass = auth[1];
+  if (user == 'admin' && pass == 'password') {
+      next(); // authorized
+  } else {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');      
+      err.status = 401;
+      next(err);
+  }
+}
+
+app.use(authenticate);
+
 app.use(express.static(path.join(__dirname, 'public'))); //serving static files
 
 //declaring the routes

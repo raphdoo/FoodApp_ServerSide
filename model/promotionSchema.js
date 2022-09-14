@@ -33,7 +33,7 @@ const promotionSchema = new Schema({
     featured: {
         type: Boolean,
         default: false
-    },s
+    }
 })
 
 const promotions = mongoose.model("promotion", promotionSchema) //creating the model
