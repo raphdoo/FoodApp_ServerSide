@@ -7,8 +7,11 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var session = require("express-session")
 var FileStore = require("session-file-store")(session)
+var passport = require('passport')
+
 
 //connecting to the routes module
+var authenticate = require('./authenticate')
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var dishRouter = require("./routes/dishRouter");
@@ -56,28 +59,24 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-const authenticate = (req, res, next) => {
-  if (!req.session.user) {
+const auth = (req, res, next) => {
+  if (!req.user) {
     var err = new Error("You are not authenticated!");
     err.status = 403;
     return next(err); 
   }
   else{
-    if(req.session.user = "authenticated"){
       next()
-    }
-    else{
-      var err = new Error("You are not authenticated!");
-      err.status = 403;
-      return next(err);
-    }
   }
 }
 
-app.use(authenticate);
+app.use(auth);
 
 app.use(express.static(path.join(__dirname, "public"))); //serving static files
 
