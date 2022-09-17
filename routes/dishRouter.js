@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose")
+var authenticate = require('../authenticate');
+const {ObjectId} = require("mongoose").Types;
 
 const dishes = require("../model/dishSchema")
 
@@ -16,6 +18,7 @@ dishRouter.route("/")
 })
 .get((req, res, next) => {
     dishes.find({})
+    .populate('comments.author.type')
     .then((dishes)=>{
 
         res.statusCode = 200
@@ -26,7 +29,7 @@ dishRouter.route("/")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     dishes.create(req.body)
     .then(dish =>{
         res.statusCode = 200
@@ -37,11 +40,11 @@ dishRouter.route("/")
         next(err)
     })
 })
-.put((req, res, next) =>{
+.put(authenticate.verifyUser, (req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete((req, res, next) =>{
+.delete(authenticate.verifyUser, (req, res, next) =>{
     dishes.remove({})
     .then((resp)=>{
 
@@ -58,6 +61,7 @@ dishRouter.route("/")
 dishRouter.route("/:dishID")
 .get((req, res, next) => {
     dishes.findById(req.params.dishID)
+    .populate('comments.author')
     .then((dish)=>{
         
         res.statusCode = 200
@@ -68,11 +72,11 @@ dishRouter.route("/:dishID")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     dishes.findByIdAndUpdate(req.params.dishID, {
         $set: req.body
     },{ new:true})
@@ -85,7 +89,7 @@ dishRouter.route("/:dishID")
         next(err)
     })
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     dishes.findByIdAndRemove(req.params.dishID)
     .then((resp) =>{
         res.statusCode = 200
@@ -105,6 +109,7 @@ dishRouter.route("/:dishID/comments")
 })
 .get((req, res, next) => {
     dishes.findById(req.params.dishID)
+    .populate('comments.author')
     .then((dish)=>{
         if (dish != null){
             res.statusCode = 200
@@ -120,17 +125,22 @@ dishRouter.route("/:dishID/comments")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     dishes.findById(req.params.dishID)
     .then(dish =>{
         if(dish != null){
+            req.body.author = req.user._id
             dish.comments.push(req.body)
 
             dish.save()
             .then((dish)=>{
-                res.statusCode = 200
-                res.setHeader("Content-Type", "application/json")
-                res.send(dish)
+                dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish)=>{
+                    res.statusCode = 200
+                    res.setHeader("Content-Type", "application/json")
+                    res.send(dish)
+                })
             })
         }else {
             err = new Error('Dish ' + req.params.dishId + ' not found');
@@ -142,16 +152,16 @@ dishRouter.route("/:dishID/comments")
         next(err)
     })
 })
-.put((req, res, next) =>{
+.put(authenticate.verifyUser, (req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete((req, res, next) =>{
+.delete(authenticate.verifyUser, (req, res, next) =>{
     dishes.findById(req.params.dishID)
     .then(dish =>{
         if (dish != null){
             for (var i = (dish.comments.length -1); i >=0; i--){
-                dish.comment.id(dish.comment[i]._id).remove()
+                dish.comments.id(dish.comments[i]._id).remove()
             }
             dish.save()
             .then(dish => {
@@ -160,7 +170,7 @@ dishRouter.route("/:dishID/comments")
                 res.send(dish)
             })
         }else{
-            err = new Error('Dish ' + req.params.dishId + ' not found');
+            err = new Error('Dish ' + req.params.dishID + ' not found');
             err.status = 404;
             return next(err);
         }    
@@ -174,6 +184,7 @@ dishRouter.route("/:dishID/comments")
 dishRouter.route("/:dishID/comments/:commentID")
 .get((req, res, next) => {
     dishes.findById(req.params.dishID)
+    .populate('comments.author')
     .then((dish)=>{
         if(dish != null && dish.comments.id(req.params.commentID) != null){
             res.statusCode = 200
@@ -193,11 +204,11 @@ dishRouter.route("/:dishID/comments/:commentID")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     dishes.findById(req.params.dishID)
     .then((dish)=>{
         if(dish != null && dish.comments.id(req.params.commentID) != null){
@@ -209,9 +220,13 @@ dishRouter.route("/:dishID/comments/:commentID")
             }
             dish.save()
             .then(dish =>{
-                res.statusCode = 200
-                res.setHeader("Content-Type", "application/json")
-                res.send(dish)
+                dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish)=>{
+                    res.statusCode = 200
+                    res.setHeader("Content-Type", "application/json")
+                    res.send(dish)
+                })
             })
         }else if(dish == null){
             err = new Error('Dish ' + req.params.dishID + ' not found');
@@ -227,7 +242,7 @@ dishRouter.route("/:dishID/comments/:commentID")
         next(err)
     })
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     dishes.findById(req.params.dishID)
     .then((dish)=>{
         if(dish != null && dish.comments.id(req.params.commentID) != null){
@@ -235,9 +250,13 @@ dishRouter.route("/:dishID/comments/:commentID")
 
             dish.save()
             .then(dish =>{
-                res.statusCode = 200
-                res.setHeader("Content-Type", "application/json")
-                res.send(dish)
+                dishes.findById(dish._id)
+                .populate('comments.author')
+                .then((dish)=>{
+                    res.statusCode = 200
+                    res.setHeader("Content-Type", "application/json")
+                    res.send(dish)
+                })
             })
         }else if(dish == null){
             err = new Error('Dish ' + req.params.dishID + ' not found');

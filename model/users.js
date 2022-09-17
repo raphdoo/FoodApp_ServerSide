@@ -5,6 +5,14 @@ var passportLocalMongoose = require('passport-local-mongoose')
 
 //modelling the leader schema
 const UserSchema = new Schema({
+    firstname:{
+        type: String,
+        default: ''
+    },
+    lastname:{
+        type: String,
+        default: ''
+    },
     admin: {
         type: Boolean,
         default: false
