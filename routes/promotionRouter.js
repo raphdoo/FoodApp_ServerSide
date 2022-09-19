@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 
 const mongoose = require("mongoose")
 const promotions = require("../model/promotionSchema")
+const authenticate = require('../authenticate')
 
 promotionRouter = express.Router();
 
@@ -25,7 +26,7 @@ promotionRouter.route("/")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     promotions.create(req.body)
     .then((promotion)=>{
         res.statusCode = 200
@@ -33,11 +34,11 @@ promotionRouter.route("/")
     }, (err) =>{ next(err) })
     .catch((err) =>{ next(err) })
 })
-.put((req, res, next) =>{
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete((req, res, next) =>{
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     promotions.remove()
     .then((resp) =>{
 
@@ -66,11 +67,11 @@ promotionRouter.route("/:promoID")
     }), (err)=>{ next(err) })
     .catch((err) => { next(err) })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     promotions.findByIdAndUpdate(req.params.promoID, {
         $set: req.body
     }, { new: true})
@@ -83,7 +84,7 @@ promotionRouter.route("/:promoID")
         next(err)
     })
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     promotions.findByIdAndRemove(req.params.promoID)
     .then((resp)=>{
         res.statusCode = 200

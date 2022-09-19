@@ -29,7 +29,7 @@ dishRouter.route("/")
         next(err)
     })
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     dishes.create(req.body)
     .then(dish =>{
         res.statusCode = 200
@@ -40,11 +40,11 @@ dishRouter.route("/")
         next(err)
     })
 })
-.put(authenticate.verifyUser, (req, res, next) =>{
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete(authenticate.verifyUser, (req, res, next) =>{
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     dishes.remove({})
     .then((resp)=>{
 
@@ -72,11 +72,11 @@ dishRouter.route("/:dishID")
         next(err)
     })
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
-.put(authenticate.verifyUser, (req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     dishes.findByIdAndUpdate(req.params.dishID, {
         $set: req.body
     },{ new:true})
@@ -89,7 +89,7 @@ dishRouter.route("/:dishID")
         next(err)
     })
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     dishes.findByIdAndRemove(req.params.dishID)
     .then((resp) =>{
         res.statusCode = 200
@@ -156,7 +156,7 @@ dishRouter.route("/:dishID/comments")
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete(authenticate.verifyUser, (req, res, next) =>{
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     dishes.findById(req.params.dishID)
     .then(dish =>{
         if (dish != null){
@@ -211,7 +211,8 @@ dishRouter.route("/:dishID/comments/:commentID")
 .put(authenticate.verifyUser, (req, res, next) => {
     dishes.findById(req.params.dishID)
     .then((dish)=>{
-        if(dish != null && dish.comments.id(req.params.commentID) != null){
+        if(dish != null && dish.comments.id(req.params.commentID) != null
+            && dish.comments.id(req.params.commentID).author.equals(req.user._id)){
             if(req.body.rating){
                 dish.comments.id(req.params.commentID).rating = req.body.rating
             }
@@ -232,9 +233,14 @@ dishRouter.route("/:dishID/comments/:commentID")
             err = new Error('Dish ' + req.params.dishID + ' not found');
             err.status = 404;
             return next(err);
-        }else{
+        }else if (dish.comments.id(req.params.commentID) == null) {
             err = new Error('comment ' + req.params.commentID + ' not found');
             err.status = 404;
+            return next(err);
+        }
+        else{
+            err = new Error('You are not authorised to edit this comment');
+            err.status = 403;
             return next(err);
         }
     }, (err)=>{ next(err) })
@@ -245,7 +251,8 @@ dishRouter.route("/:dishID/comments/:commentID")
 .delete(authenticate.verifyUser, (req, res, next) => {
     dishes.findById(req.params.dishID)
     .then((dish)=>{
-        if(dish != null && dish.comments.id(req.params.commentID) != null){
+        if(dish != null && dish.comments.id(req.params.commentID) != null
+        && dish.comments.id(req.params.commentID).author.equals(req.user._id)){
             dish.comments.id(req.params.commentID).remove()
 
             dish.save()
@@ -262,9 +269,14 @@ dishRouter.route("/:dishID/comments/:commentID")
             err = new Error('Dish ' + req.params.dishID + ' not found');
             err.status = 404;
             return next(err);
-        }else{
+        }else if (dish.comments.id(req.params.commentID) == null){
             err = new Error('comment ' + req.params.commentID + ' not found');
             err.status = 404;
+            return next(err);
+        }
+        else{
+            err = new Error('You are not authorised to delete this comment');
+            err.status = 403;
             return next(err);
         }
     }, (err)=>{ next(err) })

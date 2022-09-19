@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 
 const mongoose = require("mongoose")
 const leaders = require("../model/leaderSchema")
+const authenticate = require('../authenticate')
 
 leadersRouter = express.Router();
 
@@ -25,7 +26,7 @@ leadersRouter.route("/")
         next(err)
     })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     leaders.create(req.body)
     .then((leader)=>{
         res.statusCode = 200
@@ -33,11 +34,11 @@ leadersRouter.route("/")
     }, (err) =>{ next(err) })
     .catch((err) =>{ next(err) })
 })
-.put((req, res, next) =>{
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     res.statusCode = 403;
     res.end(`This method is not allowed here`)
 })
-.delete((req, res, next) =>{
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) =>{
     leaders.remove()
     .then((resp) =>{
 
@@ -67,11 +68,11 @@ leadersRouter.route("/:leaderID")
     }), (err)=>{ next(err) })
     .catch((err) => { next(err) })
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`This method is not supported` )
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     leaders.findByIdAndUpdate(req.params.leaderID, {
         $set: req.body
     }, { new: true})
@@ -84,7 +85,7 @@ leadersRouter.route("/:leaderID")
         next(err)
     })
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     leaders.findByIdAndRemove(req.params.leaderID)
     .then((resp)=>{
         res.statusCode = 200
