@@ -17,6 +17,7 @@ var usersRouter = require("./routes/users");
 var dishRouter = require("./routes/dishRouter");
 var leaderRouter = require("./routes/leaderRouter");
 var promotionRouter = require("./routes/promotionRouter");
+const uploadRouter = require('./routes/uploadRouter')
 
 //connecting to a database
 const mongoose = require("mongoose");
@@ -71,12 +72,14 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
 app.use(express.static(path.join(__dirname, "public"))); //serving static files
 
 //declaring the routes after authentication
+app.use('/imageupload', uploadRouter)
 app.use("/dishes", dishRouter);
 app.use("/promotions", promotionRouter);
 app.use("/leaders", leaderRouter);
