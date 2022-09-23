@@ -18,6 +18,7 @@ var dishRouter = require("./routes/dishRouter");
 var leaderRouter = require("./routes/leaderRouter");
 var promotionRouter = require("./routes/promotionRouter");
 const uploadRouter = require('./routes/uploadRouter')
+const favouriteRoute = require('./routes/favouriteRoute')
 
 //connecting to a database
 const mongoose = require("mongoose");
@@ -79,8 +80,10 @@ app.use("/users", usersRouter);
 app.use(express.static(path.join(__dirname, "public"))); //serving static files
 
 //declaring the routes after authentication
+
 app.use('/imageupload', uploadRouter)
 app.use("/dishes", dishRouter);
+app.use('/favourites', favouriteRoute)
 app.use("/promotions", promotionRouter);
 app.use("/leaders", leaderRouter);
 

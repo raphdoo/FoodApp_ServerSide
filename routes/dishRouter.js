@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose")
 var authenticate = require('../authenticate');
-const {ObjectId} = require("mongoose").Types;
 
 const dishes = require("../model/dishSchema")
 const cors = require('./cors')                                                             
@@ -20,7 +19,7 @@ dishRouter.route("/")
 })
 .get(cors.cors, (req, res, next) => {
     dishes.find({})
-    .populate('comments.author.type')
+    .populate('comments.author')
     .then((dishes)=>{
 
         res.statusCode = 200

@@ -1,7 +1,7 @@
 //importing the mongoose database ORM
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema;
-const {ObjectId} = require("mongoose").Types;
+
 
 //configuring for data type - Currency
 require("mongoose-currency").loadType(mongoose);
