@@ -1,7 +1,9 @@
+//Declaring variables
 const express = require("express");
 const bodyParser = require('body-parser');
-
 const mongoose = require("mongoose");
+
+//importing the models
 const favourites = require("../model/favourite");
 const Dishes = require('../model/dishSchema')
 const authenticate = require('../authenticate');
@@ -11,6 +13,7 @@ favouriteRouter = express.Router();
 
 favouriteRouter.use(bodyParser.json())
 
+//writing the API endpoints
 favouriteRouter.route("/")
 .options(cors.corsWithOptions, (req, res)=> { res.sendStatus(200); })
 .all((req, res, next) =>{
@@ -19,12 +22,12 @@ favouriteRouter.route("/")
     next()
 })
 .get(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
-    favourites.findOne({user:req.user._id})
-    .populate('user')
-    .populate('dishes')
+    favourites.findOne({user:req.user._id}) //finds the user making the get request
+    .populate('user') //mongoose population to get the user details
+    .populate('dishes') //mongoose population to get the dishes
     .then((favourites) =>{
         res.statusCode = 200
-        res.send(favourites)
+        res.send(favourites) //responds with users details and dishes added to favourite
         
     }, (err)=>{ next(err) })
     .catch((err)=>{
@@ -33,11 +36,11 @@ favouriteRouter.route("/")
 })
 .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     favourites.findOne({user:req.user._id})
-    .then((favourite)=>{
+    .then((favourite)=>{ 
         if(favourite){
-            for (let i=o; i<favourite.length; i++){
-                if(favourite.dishes.indexOf(req.body[i]._id) !== -1){
-                favourite.dishes.push(req.body[i]._id)
+            for (let i=o; i<req.body.length.length; i++){ //looping through the list of dishes
+                if(favourite.dishes.indexOf(req.body[i]._id) === -1){ //checking if item is not in the list
+                favourite.dishes.push(req.body[i]._id) //add the item if 
             }
             }
             favourite.save()
@@ -45,11 +48,11 @@ favouriteRouter.route("/")
                 console.log(`favourite created : ${favourite}`)
                 res.status = 200
                 res.setHeader('Content-Type', 'application/json')
-                res.json(favourite)
+                res.json(favourite) //return items
             }, err => next(err))
         }
         else{
-            favourites.create({user:req.user._id, dishes:req.body})
+            favourites.create({user:req.user._id, dishes:req.body}) //create favorite if not previously existed
             .then((favourite)=>{
                 console.log(`Favourite created: ${favourite}`)
                 res.status = 200
@@ -67,7 +70,7 @@ favouriteRouter.route("/")
     res.end(`put operation not supported on /favourites`)
 })
 .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) =>{
-    favourites.findOneAndRemove({user:req.user._id})
+    favourites.findOneAndRemove({user:req.user._id}) //remove all favourites belonging to user
     .then((resp) =>{
 
         res.status = 200
@@ -87,10 +90,10 @@ favouriteRouter.route("/:dishID")
 })
 
 .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    favourites.findOne({user: req.user._id})
+    favourites.findOne({user: req.user._id}) //get the user
     .then((favorite) => {
         if (favorite) {            
-            if (favorite.dishes.indexOf(req.params.dishId) === -1) {
+            if (favorite.dishes.indexOf(req.params.dishId) === -1) { //check if not exist
                 favorite.dishes.push(req.params.dishID)
                 favorite.save()
                 .then((favorite) => {
@@ -102,7 +105,7 @@ favouriteRouter.route("/:dishID")
             }
         }
         else {
-            favourites.create({user: req.user._id, dishes: [req.params.dishID]})
+            favourites.create({user: req.user._id, dishes: [req.params.dishID]})//create new favourite if no favourite exist
             .then((favorite) => {
                 console.log('Favorite Created ', favorite);
                 res.statusCode = 200;
@@ -119,12 +122,12 @@ favouriteRouter.route("/:dishID")
     res.end('PUT operation not supported on /favorites/'+ req.params.dishId);  
 })
 .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    favourites.findOne({user:req.user._id})
+    favourites.findOne({user:req.user._id}) 
     .then((favourite)=>{
         if(favourite){
             index = favourite.dishes.indexOf(req.params.dishID);
-            if(index >= 0){
-                favourite.dishes.splice(index, 1)
+            if(index >= 0){ //check if dishID exists
+                favourite.dishes.splice(index, 1) //delete particular dishID
                 favourite.save()
                 .then((favourite)=>{
                     console.log(`Favourite deleted: ${favourite}`)
